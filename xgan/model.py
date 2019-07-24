@@ -15,8 +15,8 @@ class Encoder(nn.Module):
         # Inputs 3x64x64
 
         # store as class member to be able to share with other Encoder
-        self.conv1 = nn.Conv2d(3, 32, 3, stride=2, padding=1),                          # 32x32x32
-        self.conv2 = nn.Conv2d(32, 64, 3, stride=2, padding=1),                         # 64x16x16
+        self.conv1 = nn.Conv2d(3, 32, 3, stride=2, padding=1)                           # 32x32x32
+        self.conv2 = nn.Conv2d(32, 64, 3, stride=2, padding=1)                          # 64x16x16
         self.conv3 = conv3 if conv3 else nn.Conv2d(64, 128, 3, stride=2, padding=1)     # 128x8x8
         self.conv4 = conv4 if conv4 else nn.Conv2d(128, 256, 3, stride=2, padding=1)    # 256x4x4
         self.fc1 = fc1 if fc1 else nn.Linear(256 * 4 * 4, 1024)                         # 1x1x1024
@@ -61,16 +61,24 @@ class Decoder(nn.Module):
 
 
 class AutoEncoder(nn.Module):
-    def __init__(self):
+    def __init__(self, enc, dec):
         super(AutoEncoder, self).__init__()
-
-        self.domain1_enc = Encoder()
-        self.domain2_enc = Encoder(self.domain1_enc.conv3, self.domain1_enc.conv4, self.domain1_enc.fc1, self.domain1_enc.fc2)
-
-        self.domain1_dec = Decoder()
-        self.domain2_dec = Decoder(self.domain1_dec.deconv1, self.domain1_dec.deconv2)
-
+        self.enc = enc
+        self.dec = dec
 
     def forward(self, x):
-        # TODO: implement
+        x = self.enc(x)
+        x = self.dec(x)
         return x
+
+
+def build_model():
+    domain1_enc = Encoder()
+    domain2_enc = Encoder(domain1_enc.conv3, domain1_enc.conv4, domain1_enc.fc1, domain1_enc.fc2)
+
+    domain1_dec = Decoder()
+    domain2_dec = Decoder(domain1_dec.deconv1, domain1_dec.deconv2)
+
+    domain1_model = AutoEncoder(domain1_enc, domain1_dec)
+    domain2_model = AutoEncoder(domain2_enc, domain2_dec)
+    return domain1_model, domain2_model

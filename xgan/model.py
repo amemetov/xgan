@@ -12,6 +12,7 @@ class Flatten(nn.Module):
 class Encoder(nn.Module):
     def __init__(self, conv3 = None, conv4 = None, fc1 = None, fc2 = None):
         super(Encoder, self).__init__()
+
         # Inputs 3x64x64
 
         # store as class member to be able to share with other Encoder
@@ -82,3 +83,23 @@ def build_model():
     domain1_model = AutoEncoder(domain1_enc, domain1_dec)
     domain2_model = AutoEncoder(domain2_enc, domain2_dec)
     return domain1_model, domain2_model
+
+
+class Discriminator(nn.Module):
+    def __init__(self):
+        super(Discriminator, self).__init__()
+
+        # Inputs size 3x64x64
+
+        self.nn = nn.Sequential(OrderedDict([
+            ('conv1', nn.Conv2d(3, 16, 3, stride=2, padding=1)),  # 16x32x32
+            ('conv2', nn.Conv2d(16, 32, 3, stride=2, padding=1)),  # 32x16x16
+            ('conv3', nn.Conv2d(32, 32, 3, stride=2, padding=1)),  # 32x8x8
+            ('conv4', nn.Conv2d(32, 32, 3, stride=2, padding=1)),  # 32x4x4
+            ('flatten', Flatten()),
+            ('fc1', nn.Linear(32*4*4, 1)),  # 1x1x1
+        ]))
+
+    def forward(self, x):
+        x = self.nn(x)
+        return x
